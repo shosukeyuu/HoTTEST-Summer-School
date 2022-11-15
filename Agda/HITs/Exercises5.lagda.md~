@@ -21,14 +21,7 @@ these items up as an equivalence S1 ≃ Circle2.
 
 ```agda
 to-from : (x : S1) → from (to x) ≡ x
-to-from = S1-elim (λ x → from (to x) ≡ x)
-                  to-from-base
-                  (PathOver-roundtrip≡
-                   from
-                   to
-                   loop
-                   {!refl (from (to base)) ∙ ap from (ap to loop) ≡⟨?⟩!})
-                                                  
+to-from = {!!}
 
 circles-equivalent : S1 ≃ Circle2
 circles-equivalent = {!!}

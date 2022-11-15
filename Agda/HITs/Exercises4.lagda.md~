@@ -34,7 +34,7 @@ homotopy2 =
      loop
      ∎
 ```
- 
+
 (Harder exercise (🌶️): give a path between homotopy1 and
 homotopy2! I'd recommend saving this until later though, because there
 is a trick to it that we haven't covered in lecture yet.)
