@@ -79,7 +79,7 @@ PathOver-constant : {l1 l2 : Level} {A : Type l1} {B : Type l2}
                   → {b1 b2 : B}
                   → b1 ≡ b2
                   → b1 ≡ b2 [ (\ _ → B) ↓ p ]
-PathOver-constant = {!!}
+PathOver-constant (refl a1) (refl a2) = reflo
 
 PathOver-constant-inverse : {l1 l2 : Level} {A : Type l1} {B : Type l2}
                           → {a1 a2 : A}
@@ -87,7 +87,7 @@ PathOver-constant-inverse : {l1 l2 : Level} {A : Type l1} {B : Type l2}
                           → {b1 b2 : B}
                           → b1 ≡ b2 [ (\ _ → B) ↓ p ]
                           → b1 ≡ b2
-PathOver-constant-inverse = {!!}
+PathOver-constant-inverse (refl _) reflo = refl _
 
 PathOver-constant-inverse-cancel1 : {l1 l2 : Level} {A : Type l1} {B : Type l2}
                           → {a1 a2 : A}
@@ -95,7 +95,7 @@ PathOver-constant-inverse-cancel1 : {l1 l2 : Level} {A : Type l1} {B : Type l2}
                           → {b1 b2 : B}
                           → (q : b1 ≡ b2)
                           → PathOver-constant-inverse p (PathOver-constant p q) ≡ q
-PathOver-constant-inverse-cancel1 = {!!}
+PathOver-constant-inverse-cancel1 (refl _) (refl _) = refl _
 
 PathOver-constant-inverse-cancel2 : {l1 l2 : Level} {A : Type l1} {B : Type l2}
                           → {a1 a2 : A}
@@ -103,7 +103,7 @@ PathOver-constant-inverse-cancel2 : {l1 l2 : Level} {A : Type l1} {B : Type l2}
                           → {b1 b2 : B}
                           → (q : b1 ≡ b2 [ _ ↓ p ])
                           → PathOver-constant p (PathOver-constant-inverse p q) ≡ q
-PathOver-constant-inverse-cancel2 = {!!}
+PathOver-constant-inverse-cancel2 (refl _) reflo = refl _
 
 PathOver-constant-equiv : {l1 l2 : Level} {A : Type l1} {B : Type l2}
                           → {a1 a2 : A}
@@ -126,7 +126,14 @@ ap-apd-constant : {l1 l2 : Level} {A : Type l1} {B : Type l2}
                 → (p : a1 ≡ a2)
                 → (f : A → B)
                 → ap f p ≡ PathOver-constant-inverse _ (apd f p)
-ap-apd-constant = {!!}
+ap-apd-constant (refl _) f = refl _
+
+ap-apd : {l1 l2 : Level} {A : Type l1} {B : Type l2}
+       → {a1 a2 : A}
+       → (p : a1 ≡ a2)
+       → (f : A → B)
+       → PathOver-constant p (ap f p) ≡ apd f p
+ap-apd (refl _) f = refl _
 ```
 
 (⋆) Define Bowtie-rec and prove the reduction for base:
@@ -137,14 +144,14 @@ Bowtie-rec : {l : Level} {X : Type l}
              (p : x ≡ x [ X ])
              (q : x ≡ x [ X ])
            → (Bowtie) → X
-Bowtie-rec {_} {X} x p q = {!!}
+Bowtie-rec {_} {X} x p q = Bowtie-elim (\_ → X) x (PathOver-constant loop1 p) (PathOver-constant loop2 q)
 
 Bowtie-rec-base : {l : Level} {X : Type l}
              (x : X)
              (p : x ≡ x [ X ])
              (q : x ≡ x [ X ])
            → Bowtie-rec x p q baseB ≡ x
-Bowtie-rec-base _ _ _ = {!!}
+Bowtie-rec-base x p q = refl x
 ```
 
 (⋆⋆) Prove the reductions for loop:
@@ -155,14 +162,31 @@ Bowtie-rec-loop1 : {l : Level} {X : Type l}
                (p : x ≡ x [ X ])
                (q : x ≡ x [ X ])
              → ap (Bowtie-rec x p q) loop1 ≡ p [ x ≡ x ]
-Bowtie-rec-loop1 x p q =  {!!}
+Bowtie-rec-loop1 {l} {X} x p q =
+                                ap (Bowtie-rec x p q) loop1
+                                   ≡⟨ ap-apd-constant loop1 (Bowtie-rec x p q)⟩
+                                PathOver-constant-inverse loop1 (apd (Bowtie-rec x p q) loop1)
+                                   ≡⟨ ap (λ ϕ → PathOver-constant-inverse loop1 ϕ) (Bowtie-elim-loop1 (\_ → X) x (PathOver-constant loop1 p) (PathOver-constant loop2 q ))⟩
+                                PathOver-constant-inverse loop1 (PathOver-constant loop1 p)
+                                   ≡⟨ PathOver-constant-inverse-cancel1 loop1 p ⟩
+                                p
+                                ∎
+
+                                                               
 
 Bowtie-rec-loop2 : {l : Level} {X : Type l}
                    (x : X)
                    (p : x ≡ x [ X ])
                    (q : x ≡ x [ X ])
                  → ap (Bowtie-rec x p q) loop2 ≡ q [ x ≡ x ]
-Bowtie-rec-loop2 x p q = {!!}
+Bowtie-rec-loop2 {l} {X} x p q = ap (Bowtie-rec x p q) loop2
+                                   ≡⟨ ap-apd-constant loop2 (Bowtie-rec x p q)⟩
+                                  PathOver-constant-inverse loop2 (apd (Bowtie-rec x p q) loop2)
+                                   ≡⟨ ap (λ ϕ → PathOver-constant-inverse loop2 ϕ) (Bowtie-elim-loop2 (\_ → X) x (PathOver-constant loop1 p) (PathOver-constant loop2 q ))⟩
+                                  PathOver-constant-inverse loop2 (PathOver-constant loop2 q)
+                                   ≡⟨ PathOver-constant-inverse-cancel1 loop2 q ⟩
+                                  q  
+                                  ∎
 ```
 
 # Loop space of the bowtie 
@@ -184,15 +208,19 @@ confusing, you might first do the proof without these lemmas
 to motivate them.  
 
 ```agda
+id-is-equiv : {A : Type} →  A ≃ A
+id-is-equiv = improve (Isomorphism id (Inverse id (λ x → refl x) (λ x → refl x)))
+
+
 concat-equiv : ∀ {A : Type} (a : A) {a' a'' : A}
                      → (p : a' ≡ a'')
                      → (a ≡ a') ≃ (a ≡ a'')
-concat-equiv = {!!}
+concat-equiv a {a'} { a''} (refl _) = id-is-equiv
 
 concat-equiv-map : ∀ {A : Type} {a a' a'' : A}
                  → (p : a' ≡ a'')
                  → fwd (concat-equiv a p) ≡ \ q → q ∙ p 
-concat-equiv-map = {!!}
+concat-equiv-map (refl _) = refl _
 ```
 
 (Note: you could also write out all of the components, but this was easier.)
@@ -201,7 +229,7 @@ concat-equiv-map = {!!}
 transport-∙ : {l1 l2 : Level} {A : Type l1} {B : A → Type l2}
                   {a1 a2 a3 : A} (p : a1 ≡ a2) (q : a2 ≡ a3)
                 → transport B (p ∙ q) ∼ transport B q ∘ transport B p
-transport-∙ = {!!}
+transport-∙ (refl _) (refl _) x = refl _
 ```
 ## Calculating the loop space 
 
@@ -274,7 +302,7 @@ proof will be analogous to the corresponding part of the Circle proof.
 
 ```agda
     Cover : Bowtie → Type
-    Cover = {!!}
+    Cover = Bowtie-rec F2 (ua mult1) (ua mult2)
                   
     encode : (x : Bowtie) → baseB ≡ x → Cover x
     encode = {!!}
