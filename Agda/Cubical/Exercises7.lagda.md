@@ -42,10 +42,23 @@ private
 
 State and prove funExt for dependent functions `f g : (x : A) → B x`
 
+```agda
+
+depfunExt : (f g : (x : A) → B x ) → ((x : A) → f x ≡ g x) → f ≡ g
+depfunExt f g p i x = p x i
+
+```
+
 ### Exercise 2 (★)
 
 Generalize the type of ap to dependent function `f : (x : A) → B x`
 (hint: the result should be a `PathP`)
+
+```agda
+apd : {x y : A} (f : (x : A) → B x) (p : x ≡ y) → PathP (λ i → B (p i)) (f x) (f y)
+apd f p i = f (p i)
+
+```
 
 
 ## Part II: Some facts about (homotopy) propositions and sets
@@ -58,6 +71,11 @@ are defined in `cubical-prelude` in the usual way
 
 State and prove that inhabited propositions are contractible
 
+```agda
+inhab-prop-contr : isProp A → A → isContr A
+inhab-prop-contr p a = a , p a 
+
+```
 
 ### Exercise 4 (★)
 
@@ -65,7 +83,8 @@ Prove
 
 ```agda
 isPropΠ : (h : (x : A) → isProp (B x)) → isProp ((x : A) → B x)
-isPropΠ = {!!}
+isPropΠ h f g i x = h x (f x) (g x) i
+
 ```
 
 ### Exercise 5 (★)
@@ -74,7 +93,7 @@ Prove the inverse of `funExt` (sometimes called `happly`):
 
 ```agda
 funExt⁻ : {f g : (x : A) → B x} → f ≡ g → ((x : A) → f x ≡ g x)
-funExt⁻  = {!!}
+funExt⁻ p x i = p i x
 ```
 
 ### Exercise 6 (★★)
@@ -82,8 +101,8 @@ funExt⁻  = {!!}
 Use funExt⁻ to prove isSetΠ:
 
 ```agda
-isSetΠ : (h : (x : A) → isSet (B x)) → isSet ((x : A) → B x)
-isSetΠ = {!!}
+isSetΠ : (p : (x : A) → isSet (B x)) → isSet ((x : A) → B x)
+isSetΠ p f g α β i j x = p x (f x) (g x) (λ k → α k x) (λ k → β k x) i j
 ```
 
 ### Exercise 7 (★★★): alternative contractibility of singletons
@@ -100,7 +119,7 @@ Prove the corresponding version of contractibility of singetons for
 
 ```agda
 isContrSingl' : (x : A) → isContr (singl' x)
-isContrSingl' x = {!!}
+isContrSingl' x = (x , refl) , (λ {(y , p) i → p (~ i) , λ j → p (~ i ∨ j)})
 ```
 
 ## Part III: Equality in Σ-types

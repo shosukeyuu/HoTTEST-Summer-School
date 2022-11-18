@@ -305,16 +305,127 @@ proof will be analogous to the corresponding part of the Circle proof.
     Cover = Bowtie-rec F2 (ua mult1) (ua mult2)
                   
     encode : (x : Bowtie) → baseB ≡ x → Cover x
-    encode = {!!}
+    encode x p = transport Cover p 1F
+
+    encode' : (x : Bowtie) → baseB ≡ x → Cover x
+    encode' .baseB (refl .baseB) = 1F
+
+    loopify : F2 → baseB ≡ baseB
+    loopify = F2-rec (refl _) (concat-equiv baseB loop1) (concat-equiv baseB loop2)
+
+
+    tr-cover-loop1 : (a : F2) → transport Cover loop1 a ≡ fwd mult1 a
+    tr-cover-loop1 a = transport Cover loop1 a
+                          ≡⟨ transport-ap-assoc Cover loop1 ⟩
+                        transport (λ X → X) (ap Cover loop1) a
+                          ≡⟨ ap (λ ϕ → transport (λ X → X) ϕ a) (Bowtie-rec-loop1 F2 (ua mult1) (ua mult2) ) ⟩
+                        transport (λ X → X) (ua mult1) a
+                          ≡⟨ uaβ mult1 ⟩
+                        fwd mult1 a
+                        ∎
+
+    tr-cover-loop2 : (a : F2) → transport Cover loop2 a ≡ fwd mult2 a
+    tr-cover-loop2 a = transport Cover loop2 a
+                          ≡⟨ transport-ap-assoc Cover loop2 ⟩
+                        transport (λ X → X) (ap Cover loop2) a
+                          ≡⟨ ap (λ ϕ → transport (λ X → X) ϕ a) (Bowtie-rec-loop2 F2 (ua mult1) (ua mult2) ) ⟩
+                        transport (λ X → X) (ua mult2) a
+                          ≡⟨ uaβ mult2 ⟩
+                        fwd mult2 a
+                        ∎
+
+    tr-cover-concat-loop1 : {x : Bowtie } (p : x ≡ baseB  ) ( y : Cover x)
+                          → transport Cover (fwd (concat-equiv x loop1) p) y ≡ fwd mult1 (transport Cover p y)
+    tr-cover-concat-loop1 (refl baseB) y = transport Cover (fwd (concat-equiv baseB loop1) (refl baseB)) y
+                                             ≡⟨ ap (λ ϕ → transport Cover (ϕ (refl baseB)) y) (concat-equiv-map loop1) ⟩
+                                            transport Cover (refl baseB ∙ loop1) y
+                                             ≡⟨ ap (λ ϕ → (transport Cover ϕ) y) (∙unit-l loop1) ⟩
+                                            transport Cover loop1 y
+                                             ≡⟨ tr-cover-loop1 y ⟩
+                                            fwd mult1 y
+                                            ∎
+
+    tr-cover-concat-loop2 : {x : Bowtie } (p : x ≡ baseB  ) ( y : Cover x)
+                          → transport Cover (fwd (concat-equiv x loop2) p) y ≡ fwd mult2 (transport Cover p y)
+    tr-cover-concat-loop2 (refl baseB) y = transport Cover (fwd (concat-equiv baseB loop2) (refl baseB)) y
+                                             ≡⟨ ap (λ ϕ → transport Cover (ϕ (refl baseB)) y) (concat-equiv-map loop2) ⟩
+                                            transport Cover (refl baseB ∙ loop2) y
+                                             ≡⟨ ap (λ ϕ → (transport Cover ϕ) y) (∙unit-l loop2) ⟩
+                                            transport Cover loop2 y
+                                             ≡⟨ tr-cover-loop2 y ⟩
+                                            fwd mult2 y
+                                            ∎
+
+    loopify-loop1 : (a : F2) → loopify (transport Cover loop1 a) ≡ loopify a ∙ loop1
+    loopify-loop1 a = loopify (transport Cover loop1 a)
+                         ≡⟨ ap loopify (tr-cover-loop1 a)⟩
+                       loopify (fwd mult1 a)
+                         ≡⟨ F2-rec-mult1 (refl _) (concat-equiv baseB loop1) (concat-equiv baseB loop2) a ⟩
+                       fwd (concat-equiv baseB loop1) (F2-rec (refl baseB) (concat-equiv baseB loop1) (concat-equiv baseB loop2) a)
+                         ≡⟨ ap (λ ϕ → ϕ (loopify a) ) (concat-equiv-map loop1)  ⟩
+                       loopify a ∙ loop1
+                       ∎
+
+    loopify-loop2 : (a : F2) → loopify (transport Cover loop2 a) ≡ loopify a ∙ loop2
+    loopify-loop2 a = loopify (transport Cover loop2 a)
+                         ≡⟨ ap loopify (tr-cover-loop2 a)⟩
+                       loopify (fwd mult2 a)
+                         ≡⟨ F2-rec-mult2 (refl _) (concat-equiv baseB loop1) (concat-equiv baseB loop2) a ⟩
+                       fwd (concat-equiv baseB loop2) (F2-rec (refl baseB) (concat-equiv baseB loop1) (concat-equiv baseB loop2) a)
+                         ≡⟨ ap (λ ϕ → ϕ (loopify a) ) (concat-equiv-map loop2)  ⟩
+                       loopify a ∙ loop2
+                       ∎
 
     decode : (x : Bowtie) → Cover x → baseB ≡ x
-    decode = {!!}
-
-    encode-decode : (x : Bowtie) (p : baseB ≡ x) → decode x (encode x p) ≡ p
-    encode-decode = {!!}
-
-    decode-encode : (x : Bowtie) (p : Cover x) → encode x (decode x p) ≡ p
-    decode-encode = {!!}
+    decode = Bowtie-elim (λ x → Cover x → baseB ≡ x)
+                         loopify
+                         (PathOver-→ (λ a → PathOver-path-to (! (loopify-loop1 a))))
+                         (PathOver-→ λ a → PathOver-path-to (! (loopify-loop2 a)))
     
+    encode-decode : (x : Bowtie) (p : baseB ≡ x) → decode x (encode x p) ≡ p
+    encode-decode baseB (refl baseB) = F2-rec-1 (refl _) (concat-equiv baseB loop1) (concat-equiv baseB loop2) 
+
+    endo-F2-is-id : (f : F2 → F2)
+                  → f 1F ≡ 1F
+                  → ((a : F2) → (f ∘ (fwd mult1)) a ≡ (fwd mult1 ∘ f) a)
+                  → ((a : F2) → (f ∘ (fwd mult2)) a ≡ (fwd mult2 ∘ f) a)
+                  → f ∼ id
+    endo-F2-is-id f f1 fm1 fm2 a  = f a
+                                      ≡⟨ F2-rec-unique f 1F mult1 mult2 f1 fm1 fm2 a ⟩
+                                     F2-rec 1F mult1 mult2 a
+                                      ≡⟨ !( F2-rec-unique (λ x → x) 1F mult1 mult2 (refl 1F) (λ a → refl (fwd mult1 a)) (λ a → refl (fwd mult2 a ) )a) ⟩
+                                     a
+                                     ∎
+    
+    encode-loopify : (a : F2) →  encode baseB ( loopify a) ≡ a
+    encode-loopify a = endo-F2-is-id (encode baseB ∘ loopify)
+                                     ((encode baseB ∘ loopify) 1F
+                                       ≡⟨ ap (λ ϕ → (encode baseB) ϕ) (F2-rec-1 (refl _) (concat-equiv baseB loop1) (concat-equiv baseB loop2) ) ⟩
+                                      encode baseB (refl baseB)
+                                       ≡⟨ refl 1F ⟩
+                                      1F
+                                      ∎)
+                                     (λ a → ((encode baseB ∘ loopify) ∘ fwd mult1) a
+                                              ≡⟨ ap (λ ϕ → encode baseB ϕ) (F2-rec-mult1 (refl _) (concat-equiv baseB loop1) (concat-equiv baseB loop2) a)  ⟩
+                                             encode baseB (fwd (concat-equiv baseB loop1) (loopify a))
+                                              ≡⟨ tr-cover-concat-loop1 (loopify a) 1F    ⟩
+                                             fwd mult1 (transport Cover (loopify a) 1F)
+                                             ∎ )
+                                     ((λ a → ((encode baseB ∘ loopify) ∘ fwd mult2) a
+                                              ≡⟨ ap (λ ϕ → encode baseB ϕ) (F2-rec-mult2 (refl _) (concat-equiv baseB loop1) (concat-equiv baseB loop2) a)  ⟩
+                                             encode baseB (fwd (concat-equiv baseB loop2) (loopify a))
+                                              ≡⟨ tr-cover-concat-loop2 (loopify a) 1F    ⟩
+                                             fwd mult2 (transport Cover (loopify a) 1F)
+                                             ∎ ))
+                                     a
+    
+    decode-encode : (x : Bowtie) (p : Cover x) → encode x (decode x p) ≡ p
+    decode-encode = Bowtie-elim (λ x → (p : Cover x) → encode x (decode x p) ≡ p)
+                                (λ p → encode-loopify p)
+                                {!!}
+                                {!!}
+
+    Bowtie-is-F2 : (baseB ≡ baseB) ≃ F2
+    Bowtie-is-F2 = improve (Isomorphism (encode baseB) (Inverse loopify (encode-decode baseB) encode-loopify))
 ```
 
