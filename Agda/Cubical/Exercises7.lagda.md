@@ -137,17 +137,17 @@ module _ {A : Type ℓ} {B : A → Type ℓ'} {x y : Σ A B} where
 
   ΣPathP : Σ p ꞉ pr₁ x ≡ pr₁ y , PathP (λ i → B (p i)) (pr₂ x) (pr₂ y)
          → x ≡ y
-  ΣPathP = {!!}
+  ΣPathP (p , q) i = (p i , q i )
 
   PathPΣ : x ≡ y
          → Σ p ꞉ pr₁ x ≡ pr₁ y , PathP (λ i → B (p i)) (pr₂ x) (pr₂ y)
-  PathPΣ = {!!}
+  PathPΣ α = (λ i → pr₁ (α i)) , λ i → pr₂ (α i) 
 
   ΣPathP-PathPΣ : ∀ p → PathPΣ (ΣPathP p) ≡ p
-  ΣPathP-PathPΣ = {!!}
+  ΣPathP-PathPΣ (fst , snd) = refl
 
   PathPΣ-ΣPathP : ∀ p → ΣPathP (PathPΣ p) ≡ p
-  PathPΣ-ΣPathP = {!!}
+  PathPΣ-ΣPathP p = refl 
 ```
 
 If one looks carefully the proof of prf in Lecture 7 uses ΣPathP
@@ -175,8 +175,32 @@ Using these two ideas, define the *Klein bottle* in two different ways.
 Prove
 
 ```agda
+
+
+
 suspUnitChar : Susp Unit ≡ Interval
-suspUnitChar = {!!}
+suspUnitChar = isoToPath (iso to from tofrom fromto)
+  where
+  to : Susp Unit → Interval
+  to north = zero
+  to south = one
+  to (merid a i) = seg i
+
+  from : Interval → Susp Unit
+  from zero = north
+  from one = south
+  from (seg i) = merid ⋆ i
+
+  tofrom : (x : Interval) → to (from x) ≡ x
+  tofrom zero = refl
+  tofrom one = refl
+  tofrom (seg i) = refl
+
+  fromto : (x : Susp Unit) → from (to x) ≡ x
+  fromto north = refl
+  fromto south = refl
+  fromto (merid a i) = refl 
+
 ```
 
 
@@ -191,7 +215,27 @@ The goal of this exercise is to prove
 
 ```agda
 suspBoolChar : Susp Bool ≡ S¹
-suspBoolChar = {!!}
+suspBoolChar = isoToPath (iso to from tofrom fromto)
+  where
+  to : Susp Bool → S¹
+  to north = base
+  to south = base
+  to (merid true i) = loop i
+  to (merid false i) = refl i
+
+  from : S¹ → Susp Bool
+  from base = north
+  from (loop i) = (merid true ∙ sym (merid false)) i
+
+  fromto : (x : Susp Bool) → from (to x) ≡ x
+  fromto north = refl
+  fromto south = merid false
+  fromto (merid true i) j = {!!} 
+  fromto (merid false i) = {!!}
+
+  tofrom : (x : S¹) → to (from x) ≡ x
+  tofrom base = refl
+  tofrom (loop i) = {!!}
 ```
 
 For the map `Susp Bool → S¹`, we have to specify the behavior of two
